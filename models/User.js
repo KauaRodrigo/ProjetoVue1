@@ -1,6 +1,5 @@
 var knex = require("../database/connection")
 var PasswordTokens = require("../models/PasswordTokens")
-var { v4 : uuidv4 } = require('uuid')
 var bcrypt = require('bcrypt')
 
 class User{
@@ -18,7 +17,7 @@ class User{
 
     async findById(id){
         try{
-            var result = await knex.select("id", "name", "email", "role").from("users").where({id: id})
+            var result = await knex.select(["id", "name", "email", "role"]).where({id: id}).table("users")
             if(result.length > 0){
                 return result[0]
             }
@@ -28,24 +27,12 @@ class User{
         }
     }
 
-    async new(email, password, name){
+    async create(email, password, name){
         try {
             var hash = await bcrypt.hash(password, 10)            
             await knex.insert({email, password: hash, name, role: 0}).table("users");    
         } catch (err) {
             console.log(err)
-        }
-    }
-
-    async findByEmail(email){
-        try{
-            var result = await knex.select("*").from("users").where({email: email})
-            if(result.length > 0){
-                return result[0]
-            }
-        }catch(err){
-            console.log(err)
-            return []
         }
     }
 
@@ -120,6 +107,23 @@ class User{
         }
     }
 
+    async findByEmail(email){
+        try{
+            var result = await knex.select("*").table("users").where({email: email})
+            if(result.length > 0){
+                return result[0]
+            }
+        }catch(err){
+            console.log(err)
+            return []
+        }
+    }
+
+    async changePassword(newPassword, id, token){
+        var hash = await bcrypt.hash(newPassword, 10)            
+        await knex.update({password: hash}).where({id: id}).table("users")
+        await PasswordTokens.setUsed(token)
+    }
     
 
 }
