@@ -102,44 +102,25 @@ class User{
 
     }
 
-    async passwordRecover(email){
-        var user = await this.findByEmail(email)
-        if(user){  
-            var token = uuidv4()
-            PasswordTokens.new(token, user.id)
-        }else{
-            return {status: 404, err: "email não cadasrtrado"}
-        }        
-    }
+    async delete(id){
+        var user = await this.findById(id);
+        if(user != undefined){
 
-    async userVerify(id){
-        var id = req.body.id
-        try{
-            var user = await knex.select("*").from("users").where({id: id})
+            try {
+                await knex.delete().where({id: id}).table("users")
+                return {status: true}
+            } catch (error) {
 
-            if(user.length > 0){
-                return user[0]
-            }else{
-                return "Usuário não encontrado"
+                return {status: false, err: error}
             }
-        }catch(err){
-            console.log(err)
-        }
-        
-    }
+            
 
-    async passwordUpdate(id, newPassword){
-        var user = this.userVerify(id);
-        if(user){
-            try{
-                await knex.update({password: newPassword}).where({id: user.id}).table("users")
-            }catch(err){
-                console.log(err)
-            }
         }else{
-            console.log("Usuário não encontrado")
+            return {status: false, err: "Usuário não encontrado!"}
         }
     }
+
+    
 
 }
 

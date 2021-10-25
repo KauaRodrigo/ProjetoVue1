@@ -1,9 +1,10 @@
 var User = require('../models/User')
+var PasswordTokens = require('../models/PasswordTokens')
 class UserController{
 
     async index(req, res){
         var users = await User.findAll();
-        res.json(users)
+        res.json(users)        
     }
 
     async findUser(req, res){
@@ -61,19 +62,31 @@ class UserController{
         }        
     }
 
-    async login(req, res){
+    async remove(req, res){
+        var id = req.params.id
 
+        var result = await User.delete(id)
+
+        if(result.status){
+                res.status(200)
+                res.send("Tudo Ok!")                
+        }else{
+            res.status(406)
+            res.send(result.err)
+        }
     }
 
-    async passswordRecover(req, res){
+    async recoverPassword(req, res){
         var email = req.body.email
-        var result = await User.findByEmail(email)
-        
-        res.json(result.id)
-    }
 
-    async passwordUpdate(req, res){
-
+        var result = await PasswordTokens.new(email)
+        if(result.status){
+            res.status(2000)
+            res.send(result.token)
+        }else{
+            res.status(406)
+            res.send(result.err)
+        }
     }
 
 }
